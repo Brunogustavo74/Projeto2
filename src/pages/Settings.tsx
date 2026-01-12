@@ -23,12 +23,12 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { 
-  Settings, 
-  Bell, 
-  Shield, 
-  Palette, 
-  Globe, 
+import {
+  Settings,
+  Bell,
+  Shield,
+  Palette,
+  Globe,
   Trash2,
   Mail,
   Smartphone,
@@ -40,22 +40,24 @@ import {
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 
+import { changeUserPassword } from "@/modules/changeUserPassword";
+
 export default function UserSettings() {
   const { user, profile } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
-  
+
   // Password change states
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [isChangingPassword, setIsChangingPassword] = useState(false);
-  
+
   // Delete account states
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleteConfirmation, setDeleteConfirmation] = useState("");
   const [isDeletingAccount, setIsDeletingAccount] = useState(false);
-  
+
   const [notifications, setNotifications] = useState({
     email: true,
     push: true,
@@ -63,12 +65,12 @@ export default function UserSettings() {
     sales: true,
     purchases: true,
   });
-  
+
   const [privacy, setPrivacy] = useState({
     profilePublic: false,
     showActivity: true,
   });
-  
+
   const handleSave = async () => {
     setIsLoading(true);
     // Simulate save
@@ -76,7 +78,7 @@ export default function UserSettings() {
     setIsLoading(false);
     toast.success("Configurações salvas com sucesso!");
   };
-  
+
   const handlePasswordChangeClick = () => {
     if (!currentPassword || !newPassword || !confirmPassword) {
       toast.error("Preencha todos os campos de senha");
@@ -92,24 +94,36 @@ export default function UserSettings() {
     }
     setShowPasswordModal(true);
   };
-  
+
   const handleConfirmPasswordChange = async () => {
+    if (!user?.email) return;
+
     setIsChangingPassword(true);
-    // Simulate password change
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    setIsChangingPassword(false);
-    setShowPasswordModal(false);
-    setCurrentPassword("");
-    setNewPassword("");
-    setConfirmPassword("");
-    toast.success("Senha alterada com sucesso!");
+
+    try {
+      await changeUserPassword(
+        user.email,
+        currentPassword,
+        newPassword
+      );
+
+      toast.success("Senha alterada com sucesso. Faça login novamente.");
+
+      window.location.href = "/login";
+    } catch (err: any) {
+      toast.error(err.message || "Erro ao alterar senha");
+    } finally {
+      setIsChangingPassword(false);
+    }
   };
-  
+
+
+
   const handleDeleteAccountClick = () => {
     setShowDeleteModal(true);
     setDeleteConfirmation("");
   };
-  
+
   const handleConfirmDeleteAccount = async () => {
     if (deleteConfirmation !== "quero deletar") {
       toast.error("Digite 'quero deletar' para confirmar");
@@ -123,7 +137,7 @@ export default function UserSettings() {
     toast.success("Conta excluída com sucesso");
     // Here you would redirect to login/home after deletion
   };
-  
+
   return (
     <div className="min-h-screen py-8">
       <div className="container mx-auto px-4">
@@ -143,7 +157,7 @@ export default function UserSettings() {
             Gerencie suas preferências e configurações de conta
           </p>
         </motion.div>
-        
+
         <div className="max-w-2xl space-y-6">
           {/* Notifications */}
           <motion.section
@@ -161,7 +175,7 @@ export default function UserSettings() {
                 <p className="text-sm text-foreground-secondary">Configure como deseja receber alertas</p>
               </div>
             </div>
-            
+
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
@@ -176,9 +190,9 @@ export default function UserSettings() {
                   onCheckedChange={(checked) => setNotifications(prev => ({ ...prev, email: checked }))}
                 />
               </div>
-              
+
               <Separator />
-              
+
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <Smartphone className="w-5 h-5 text-foreground-muted" />
@@ -192,9 +206,9 @@ export default function UserSettings() {
                   onCheckedChange={(checked) => setNotifications(prev => ({ ...prev, push: checked }))}
                 />
               </div>
-              
+
               <Separator />
-              
+
               <div className="flex items-center justify-between">
                 <div>
                   <p className="font-medium text-foreground">Atualizações de vendas</p>
@@ -205,7 +219,7 @@ export default function UserSettings() {
                   onCheckedChange={(checked) => setNotifications(prev => ({ ...prev, sales: checked }))}
                 />
               </div>
-              
+
               <div className="flex items-center justify-between">
                 <div>
                   <p className="font-medium text-foreground">Atualizações de compras</p>
@@ -216,9 +230,9 @@ export default function UserSettings() {
                   onCheckedChange={(checked) => setNotifications(prev => ({ ...prev, purchases: checked }))}
                 />
               </div>
-              
+
               <Separator />
-              
+
               <div className="flex items-center justify-between">
                 <div>
                   <p className="font-medium text-foreground">Email de marketing</p>
@@ -231,7 +245,7 @@ export default function UserSettings() {
               </div>
             </div>
           </motion.section>
-          
+
           {/* Privacy */}
           <motion.section
             initial={{ opacity: 0, y: 20 }}
@@ -248,7 +262,7 @@ export default function UserSettings() {
                 <p className="text-sm text-foreground-secondary">Controle sua privacidade e visibilidade</p>
               </div>
             </div>
-            
+
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
@@ -263,9 +277,9 @@ export default function UserSettings() {
                   onCheckedChange={(checked) => setPrivacy(prev => ({ ...prev, profilePublic: checked }))}
                 />
               </div>
-              
+
               <Separator />
-              
+
               <div className="flex items-center justify-between">
                 <div>
                   <p className="font-medium text-foreground">Mostrar atividade</p>
@@ -278,7 +292,7 @@ export default function UserSettings() {
               </div>
             </div>
           </motion.section>
-          
+
           {/* Security */}
           <motion.section
             initial={{ opacity: 0, y: 20 }}
@@ -295,7 +309,7 @@ export default function UserSettings() {
                 <p className="text-sm text-foreground-secondary">Proteja sua conta</p>
               </div>
             </div>
-            
+
             <div className="space-y-4">
               <div>
                 <Label htmlFor="current-password">Senha atual</Label>
@@ -308,7 +322,7 @@ export default function UserSettings() {
                   onChange={(e) => setCurrentPassword(e.target.value)}
                 />
               </div>
-              
+
               <div>
                 <Label htmlFor="new-password">Nova senha</Label>
                 <Input
@@ -320,7 +334,7 @@ export default function UserSettings() {
                   onChange={(e) => setNewPassword(e.target.value)}
                 />
               </div>
-              
+
               <div>
                 <Label htmlFor="confirm-password">Confirmar nova senha</Label>
                 <Input
@@ -332,13 +346,13 @@ export default function UserSettings() {
                   onChange={(e) => setConfirmPassword(e.target.value)}
                 />
               </div>
-              
+
               <Button variant="outline" className="w-full" onClick={handlePasswordChangeClick}>
                 Alterar Senha
               </Button>
             </div>
           </motion.section>
-          
+
           {/* Danger Zone */}
           <motion.section
             initial={{ opacity: 0, y: 20 }}
@@ -355,26 +369,26 @@ export default function UserSettings() {
                 <p className="text-sm text-foreground-secondary">Ações irreversíveis</p>
               </div>
             </div>
-            
+
             <p className="text-sm text-foreground-secondary mb-4">
-              Ao excluir sua conta, todos os seus dados serão permanentemente removidos. 
+              Ao excluir sua conta, todos os seus dados serão permanentemente removidos.
               Esta ação não pode ser desfeita.
             </p>
-            
+
             <Button variant="destructive" className="gap-2" onClick={handleDeleteAccountClick}>
               <Trash2 className="w-4 h-4" />
               Excluir Conta
             </Button>
           </motion.section>
-          
+
           {/* Save Button */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.5 }}
           >
-            <Button 
-              onClick={handleSave} 
+            <Button
+              onClick={handleSave}
               disabled={isLoading}
               className="w-full gap-2"
             >
@@ -390,7 +404,7 @@ export default function UserSettings() {
           </motion.div>
         </div>
       </div>
-      
+
       {/* Password Change Confirmation Modal */}
       <AlertDialog open={showPasswordModal} onOpenChange={setShowPasswordModal}>
         <AlertDialogContent>
@@ -415,7 +429,7 @@ export default function UserSettings() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-      
+
       {/* Delete Account Confirmation Modal */}
       <Dialog open={showDeleteModal} onOpenChange={setShowDeleteModal}>
         <DialogContent className="sm:max-w-md">
@@ -428,14 +442,14 @@ export default function UserSettings() {
               Esta ação é <strong>irreversível</strong>. Todos os seus dados, incluindo produtos, pedidos e histórico serão permanentemente excluídos.
             </DialogDescription>
           </DialogHeader>
-          
+
           <div className="space-y-4 py-4">
             <div className="p-4 rounded-lg bg-destructive/10 border border-destructive/20">
               <p className="text-sm text-foreground">
                 Para confirmar, digite <strong className="text-destructive">"quero deletar"</strong> no campo abaixo:
               </p>
             </div>
-            
+
             <div>
               <Input
                 placeholder="Digite 'quero deletar'"
@@ -445,7 +459,7 @@ export default function UserSettings() {
               />
             </div>
           </div>
-          
+
           <DialogFooter className="gap-2 sm:gap-0">
             <Button
               variant="outline"
